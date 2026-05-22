@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>FinSight Pro | 金融分析工作台</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="主导航">
+        <div class="brand">
+          <div class="brand-mark">F</div>
+          <div>
+            <strong>FinSight Pro</strong>
+            <span>Macro & Flow Desk</span>
+          </div>
+        </div>
+
+        <nav class="nav-list">
+          <button class="nav-item active" data-view="dashboard" type="button">
+            <span class="icon">⌂</span>
+            市场首页
+          </button>
+          <button class="nav-item" data-view="sector" data-sector="semiconductor" type="button">
+            <span class="icon">◧</span>
+            半导体
+          </button>
+          <button class="nav-item" data-view="sector" data-sector="gold" type="button">
+            <span class="icon">◇</span>
+            黄金链
+          </button>
+          <button class="nav-item" data-view="sector" data-sector="global" type="button">
+            <span class="icon">◎</span>
+            全球波动
+          </button>
+        </nav>
+
+        <div class="side-panel">
+          <span class="panel-label">分析频率</span>
+          <strong>每 1 小时</strong>
+          <p id="nextRunText">下次分析计算中</p>
+          <div class="progress-track" aria-hidden="true">
+            <div id="hourProgress" class="progress-bar"></div>
+          </div>
+        </div>
+      </aside>
+
+      <main class="workspace">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">专业金融分析网站</p>
+            <h1 id="pageTitle">跨市场资金与波动监控</h1>
+          </div>
+          <div class="top-actions">
+            <div class="status-pill">
+              <span class="pulse"></span>
+              <span id="lastUpdated">等待首次分析</span>
+            </div>
+            <button id="refreshBtn" class="primary-btn" type="button">立即分析</button>
+          </div>
+        </header>
+
+        <section id="dashboardView" class="view active-view">
+          <div class="data-note">
+            <strong>数据状态</strong>
+            当前版本使用内置演示数据与规则化分析框架，适合接入行情、资金流、新闻事件 API 后上线；页面结论不构成投资建议。
+          </div>
+
+          <div class="market-visual" aria-label="全球市场热力图">
+            <canvas id="marketCanvas" width="1120" height="320"></canvas>
+            <div class="visual-copy">
+              <span>Global Risk Map</span>
+              <strong>资金、黄金、全球波动联动扫描</strong>
+            </div>
+          </div>
+
+          <div class="metric-grid" id="dashboardCards"></div>
+
+          <div class="content-grid">
+            <section class="analysis-panel wide">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">资金主线</p>
+                  <h2>板块资金流向</h2>
+                </div>
+                <span class="tag positive">净流入</span>
+              </div>
+              <div id="flowTable" class="flow-table"></div>
+            </section>
+
+            <section class="analysis-panel">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">风险雷达</p>
+                  <h2>当前信号</h2>
+                </div>
+              </div>
+              <div id="signalList" class="signal-list"></div>
+            </section>
+          </div>
+        </section>
+
+        <section id="sectorView" class="view">
+          <div class="sector-toolbar">
+            <button class="ghost-btn" id="backBtn" type="button">返回首页</button>
+            <div class="segmented" role="tablist" aria-label="板块切换">
+              <button class="segment active" data-sector="semiconductor" type="button">半导体</button>
+              <button class="segment" data-sector="gold" type="button">黄金链</button>
+              <button class="segment" data-sector="global" type="button">全球波动</button>
+            </div>
+          </div>
+
+          <div class="sector-summary">
+            <div>
+              <p class="eyebrow" id="sectorEyebrow">Sector Detail</p>
+              <h2 id="sectorName">半导体板块</h2>
+              <p id="sectorSummaryText"></p>
+            </div>
+            <div class="score-box">
+              <span>综合评分</span>
+              <strong id="sectorScore">--</strong>
+            </div>
+          </div>
+
+          <div class="detail-grid">
+            <section class="analysis-panel chart-panel">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">近日趋势</p>
+                  <h2>价格与相对强度</h2>
+                </div>
+                <span id="trendTag" class="tag">趋势</span>
+              </div>
+              <canvas id="trendCanvas" width="760" height="360"></canvas>
+            </section>
+
+            <section class="analysis-panel">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">资金结构</p>
+                  <h2>主力/北向/ETF</h2>
+                </div>
+              </div>
+              <div id="sectorFlow" class="flow-stack"></div>
+            </section>
+
+            <section class="analysis-panel wide">
+              <div class="section-heading">
+                <div>
+                  <p class="eyebrow">事件驱动</p>
+                  <h2>近期重大事件利好利空</h2>
+                </div>
+                <span id="eventBalance" class="tag">中性</span>
+              </div>
+              <div id="eventList" class="event-list"></div>
+            </section>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="./app.js"></script>
+  </body>
+</html>
