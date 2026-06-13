@@ -1,31 +1,35 @@
-# UICommand 设计
+# UICommand Design
 
-UICommand 用来解决一个核心问题：主进程业务 JSAPI 需要触发 UI 动作，但 `Activity`、`Fragment`、`View`、`WebView` 都不能跨进程传递。
+UICommand solves one problem: a main-process JSAPI may need UI, but Android UI objects cannot cross processes.
 
-结论：
+## Principle
 
-- 跨进程只传 `pageId + command + payload`。
-- UI 对象留在 Web/UI 进程，通过 `UiSessionRegistry` 按 `pageId` 查找。
-- 主进程只能请求 UI 进程执行命令，不能持有 UI 对象。
+Cross process:
 
-## 调用链
-
-```mermaid
-flowchart LR
-    Web["Web JS"] --> Hybrid["Hybrid.invoke(requestJson)"]
-    Hybrid --> Remote["RemoteJsApiInvoker<br/>:web process"]
-    Remote --> MainTask["InvokeJsApiTask<br/>main process"]
-    MainTask --> Handler["demo.confirmThenEcho<br/>main handler"]
-    Handler --> Client["UiCommandClient<br/>build command JSON"]
-    Client --> UiTask["InvokeUiCommandTask<br/>:web process"]
-    UiTask --> Registry["UiSessionRegistry<br/>pageId lookup"]
-    Registry --> Session["WebUiSession<br/>Activity/Fragment holder"]
-    Session --> Dialog["AlertDialog"]
-    Dialog --> Handler
-    Handler --> Web
+```text
+pageId + command + payload
 ```
 
-## UICommand 请求
+Stay local in UI process:
+
+```text
+Activity / Fragment / View / WebView
+```
+
+## Flow
+
+```text
+demo.confirmThenEcho
+  -> UiCommandClient
+  -> InvokeUiCommandTask in :web
+  -> UiSessionRegistry.get(pageId)
+  -> WebUiSession.dispatchUiCommand
+  -> AlertDialog
+  -> UICommand response
+  -> JSAPI response
+```
+
+## Command Request
 
 ```json
 {
@@ -44,7 +48,7 @@ flowchart LR
 }
 ```
 
-## UICommand 响应
+## Command Response
 
 ```json
 {
@@ -55,8 +59,7 @@ flowchart LR
   "code": "OK",
   "message": "success",
   "data": {
-    "confirmed": true,
-    "pageId": "page_1710000000000_abcd"
+    "confirmed": true
   },
   "process": "com.example.webmultiprocess:web",
   "costMs": 1200,
@@ -64,65 +67,28 @@ flowchart LR
 }
 ```
 
-## Demo 对应代码
+## Add A New UICommand
 
-- `ui/UiCommandProtocol.java`: UICommand 请求和响应协议。
-- `ui/UiCommandConfigs.java`: UICommand 名称、默认文案和超时配置。
-- `ui/UiCommandFields.java`: UICommand 请求和响应字段。
-- `ui/UiCommandCodes.java`: UICommand 错误码。
-- `ui/UiSessionRegistry.java`: 当前进程内的 `pageId -> UiSession` 注册表。
-- `ui/WebUiSession.java`: 持有 Activity 弱引用，只在 UI 进程内执行弹窗。
-- `ui/UiCommandClient.java`: 主进程同步等待 UICommand 结果。
-- `ipc/InvokeUiCommandTask.java`: IPCInvoker 反向调用 Web/UI 进程。
-- `handlers/ConfirmThenEchoHandler.java`: 混合 JSAPI 示例。
+1. Add one `UiCommandContract.CommandSpec`.
+2. Add command dispatch logic in `WebUiSession`.
+3. Call it from a main-process handler through `UiCommandClient`.
 
-## 现有 Bridge 迁移原则
-
-老接口里如果直接依赖：
+Handler side:
 
 ```java
-bridge.getActivity()
-bridge.getFragment()
-bridge.getContext()
-```
-
-不要把这个 `bridge` 放进 IPC request。应该按接口能力拆：
-
-| 能力类型 | 迁移方式 |
-| --- | --- |
-| 纯业务数据 | 主进程 Handler 直接执行 |
-| 纯 UI 动作 | 留在 Web/UI 进程 Handler 执行 |
-| 主进程业务 + UI 动作 | 主进程 Handler 通过 UICommand 请求 UI 进程 |
-
-`Context` 也要拆清楚：
-
-- 主进程 Handler 只拿 `Application Context`。
-- UI 进程 Handler 或 `WebUiSession` 才能拿 `Activity/Fragment`。
-- 如果 `pageId` 找不到 UI session，返回 `UI_CONTEXT_UNAVAILABLE`。
-
-## 配置化约束
-
-新增 UICommand 不要在 handler 里裸写命令字符串。先增加配置：
-
-```java
-public static final UiCommandConfig DIALOG_CONFIRM = new UiCommandConfig(
-        "dialog.confirm",
-        6000L,
-        "UICommand from main process",
-        "The JSAPI handler is running in main process and asks UI process to confirm.",
-        "Confirm",
-        "Cancel");
-```
-
-业务 handler 只引用配置：
-
-```java
-UiCommandConfig confirmConfig = UiCommandConfigs.DIALOG_CONFIRM;
-UiCommandClient.dispatchSync(
+UiCommandContract.CommandSpec command = UiCommandContract.DIALOG_CONFIRM;
+String uiResponse = UiCommandClient.dispatchSync(
         context.getContext(),
         pageId,
-        confirmConfig.command(),
+        command.command(),
         name(),
-        uiPayload,
-        confirmConfig.timeoutMs());
+        payload,
+        command.timeoutMs());
 ```
+
+## Failure Cases
+
+- `UI_CONTEXT_UNAVAILABLE`: `pageId` has no live UI session.
+- `ACTIVITY_UNAVAILABLE`: Activity is gone.
+- `UI_COMMAND_NOT_FOUND`: UI process does not support the command.
+- `UI_COMMAND_TIMEOUT`: no result before timeout.

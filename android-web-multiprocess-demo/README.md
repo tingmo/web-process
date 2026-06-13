@@ -1,25 +1,24 @@
 # Android Web Multiprocess Demo
 
-这个 demo 展示一个 Android WebView 多进程容器方案：
+Minimal demo for a WebView container with:
 
-- `MainActivity` 运行在主进程，负责启动策略和 JSAPI 目录展示。
-- `WebProcessActivity` 运行在 `:web` 子进程，承载 WebView。
-- Web 页面通过统一 `NativeBridge.postMessage(json)` 调用 Native。
-- `RemoteJsApiInvoker` 使用 IPCInvoker 把 JSAPI 请求转发到主进程。
-- `InvokeJsApiTask` 在主进程执行统一派发，不暴露 AIDL 给业务实现方。
-- `LocalWebActivity` 是主进程本地降级容器。
+- WebView isolated in `:web`.
+- JSAPI business handlers executed in the main process when needed.
+- IPCInvoker as the only cross-process transport.
+- UICommand for main-process handlers that need UI actions.
+- Local fallback for safe APIs when IPC is unavailable.
 
-## 运行
+## Run
 
-用 Android Studio 打开 `android-web-multiprocess-demo`，同步 Gradle 后运行 `app`。
+Open `android-web-multiprocess-demo` in Android Studio and run `app`.
 
-工程依赖：
+Dependency:
 
 ```gradle
 implementation "cc.suitalk.android:ipc-invoker:1.3.7"
 ```
 
-IPCInvoker 1.3.7 没在 Maven Central 路径下可用，本 demo 在 `settings.gradle` 增加了公开 Maven 镜像：
+The demo also adds the public repository that hosts this artifact:
 
 ```gradle
 maven {
@@ -27,56 +26,76 @@ maven {
 }
 ```
 
-## 架构
+## Modules
 
-```mermaid
-flowchart LR
-    Web["Web page<br/>window.WebNative.invoke"] --> Bridge["WebJsBridge<br/>@JavascriptInterface"]
-    Bridge --> Remote["RemoteJsApiInvoker<br/>web process"]
-    Remote --> IPC["IPCInvoker<br/>IPCTask + InvokeJsApiTask"]
-    IPC --> Dispatcher["JsApiDispatcher<br/>main process"]
-    Dispatcher --> Registry["JsApiRegistry"]
-    Registry --> Handler["JsApiHandler implementation"]
-    Handler --> Dispatcher
-    Dispatcher --> IPC
-    IPC --> Bridge
-    Bridge --> Web
-    Remote --> LocalFallback["LocalJsApiInvoker<br/>safe fallback APIs"]
+```text
+app/
+  DemoApplication        IPCInvoker setup and JSAPI registration
+  MainActivity           Launcher page and demo entry
+  WebProcessActivity     WebView container in :web
+  LocalWebActivity       Main-process fallback WebView container
+  bridge/                JS <-> Native bridge and remote/local invokers
+  ipc/                   IPCInvoker services and tasks
+  jsapi/                 JSAPI contract, dispatcher, registry, result model
+  jsapi/handlers/        Example JSAPI handlers
+  ui/                    UICommand contract, session registry, UI dispatcher
+  assets/web/demo.html   Web-side invoke wrapper and test page
 ```
 
-## 示例 JSAPI
+## Main Flow
 
-| API | 说明 | 主进程限定 | 可本地降级 |
+```text
+Web JS
+  -> NativeBridge.postMessage(requestJson)
+  -> WebJsBridge
+  -> RemoteJsApiInvoker
+  -> IPCInvoker InvokeJsApiTask
+  -> JsApiDispatcher
+  -> JsApiHandler
+  -> response JSON
+  -> window.WebNative.__callback(responseJson)
+```
+
+Only JSON crosses processes. `Activity`, `Fragment`, `WebView`, `View`, and old `Bridge` objects stay in the local UI process.
+
+## UICommand Flow
+
+Used when a main-process JSAPI needs UI:
+
+```text
+Main-process JsApiHandler
+  -> UiCommandClient(pageId, command, payload)
+  -> IPCInvoker InvokeUiCommandTask
+  -> UiSessionRegistry.lookup(pageId)
+  -> WebUiSession
+  -> Activity / Dialog / Fragment action
+  -> UICommand response JSON
+  -> JsApiHandler result
+```
+
+## Key Contracts
+
+- `JsApiContract`: API specs, bridge fields, bridge error codes, demo constants.
+- `UiCommandContract`: UI command specs, UI command fields, UI command error codes.
+- `ConfiguredJsApiHandler`: removes duplicated `name/version/description/process` boilerplate.
+- `JsApiDispatcher`: validates the request and calls the registered handler.
+- `UiSessionRegistry`: maps `pageId` to a live UI session by weak reference.
+
+## Example APIs
+
+| API | Purpose | Main only | Local fallback |
 | --- | --- | --- | --- |
-| `runtime.getApiCatalog` | 输出标准化接口目录 | 否 | 是 |
-| `device.getInfo` | 设备、App、进程信息 | 否 | 是 |
-| `ui.toast` | 展示 Native Toast | 否 | 是 |
-| `user.getProfile` | 模拟主进程账号态 | 是 | 否 |
-| `storage.set` | 写主进程 SharedPreferences | 是 | 否 |
-| `storage.get` | 读主进程 SharedPreferences | 是 | 否 |
-| `demo.echo` | 后续接口实现模板 | 否 | 是 |
-| `demo.confirmThenEcho` | 主进程业务通过 UICommand 请求 UI 进程弹确认框 | 是 | 否 |
+| `runtime.getApiCatalog` | Expose handler catalog | No | Yes |
+| `device.getInfo` | Device/process info | No | Yes |
+| `ui.toast` | Native toast | No | Yes |
+| `user.getProfile` | Mock main-process account data | Yes | No |
+| `storage.set` | Main-process storage write | Yes | No |
+| `storage.get` | Main-process storage read | Yes | No |
+| `demo.echo` | Handler template | No | Yes |
+| `demo.confirmThenEcho` | Main handler asks UI process to confirm | Yes | No |
 
-更多实现规范见 [docs/JSAPI_STANDARD.md](docs/JSAPI_STANDARD.md)。
-降级策略见 [docs/DEGRADE_STRATEGY.md](docs/DEGRADE_STRATEGY.md)。
-UICommand 反向 UI 调用设计见 [docs/UICOMMAND_DESIGN.md](docs/UICOMMAND_DESIGN.md)。
+More details:
 
-## 关键文件
-
-- `app/src/main/java/com/example/webmultiprocess/DemoApplication.java`: IPCInvoker 初始化。
-- `app/src/main/java/com/example/webmultiprocess/ipc`: IPCInvoker Service 和跨进程 Task。
-- `app/src/main/java/com/example/webmultiprocess/bridge`: Web JSBridge、远程/本地 Invoker。
-- `app/src/main/java/com/example/webmultiprocess/jsapi`: JSAPI 协议、派发器、注册表、接口配置。
-- `app/src/main/java/com/example/webmultiprocess/jsapi/handlers`: 标准化接口示例。
-- `app/src/main/java/com/example/webmultiprocess/ui`: UICommand 协议、会话注册、反向 UI 命令分发。
-- `app/src/main/assets/web/demo.html`: Web 侧 Promise 调用封装与测试页面。
-
-## 配置化约束
-
-协议字段、错误码、JSAPI 名称、UICommand 名称和默认 UI 文案集中声明：
-
-- `ApiConfigs`: JSAPI 名称、版本、描述、进程亲和性。
-- `BridgeFields` / `BridgeCodes`: JSBridge 请求响应字段和错误码。
-- `UiCommandConfigs`: UICommand 名称、超时、默认弹窗文案。
-- `UiCommandFields` / `UiCommandCodes`: UICommand 请求响应字段和错误码。
-- Web demo 页通过 `API_CONFIG` 渲染按钮和默认参数，不在按钮 DOM 上散落 API 字符串。
+- [JSAPI_STANDARD.md](docs/JSAPI_STANDARD.md)
+- [UICOMMAND_DESIGN.md](docs/UICOMMAND_DESIGN.md)
+- [DEGRADE_STRATEGY.md](docs/DEGRADE_STRATEGY.md)

@@ -62,13 +62,13 @@ public final class JsApiRegistry {
         for (JsApiHandler handler : HANDLERS.values()) {
             JSONObject item = new JSONObject();
             try {
-                item.put(ApiCatalogFields.NAME, handler.name());
-                item.put(ApiCatalogFields.VERSION, handler.version());
-                item.put(ApiCatalogFields.DESCRIPTION, handler.description());
-                item.put(ApiCatalogFields.MAIN_PROCESS_ONLY, handler.mainProcessOnly());
-                item.put(ApiCatalogFields.ALLOW_LOCAL_FALLBACK, handler.allowLocalFallback());
-                item.put(ApiCatalogFields.PARAMS_SCHEMA, handler.paramsSchema());
-                item.put(ApiCatalogFields.RESULT_SCHEMA, handler.resultSchema());
+                item.put(JsApiContract.Catalog.NAME, handler.name());
+                item.put(JsApiContract.Catalog.VERSION, handler.version());
+                item.put(JsApiContract.Catalog.DESCRIPTION, handler.description());
+                item.put(JsApiContract.Catalog.MAIN_PROCESS_ONLY, handler.mainProcessOnly());
+                item.put(JsApiContract.Catalog.ALLOW_LOCAL_FALLBACK, handler.allowLocalFallback());
+                item.put(JsApiContract.Catalog.PARAMS_SCHEMA, handler.paramsSchema());
+                item.put(JsApiContract.Catalog.RESULT_SCHEMA, handler.resultSchema());
             } catch (JSONException ignored) {
             }
             array.put(item);

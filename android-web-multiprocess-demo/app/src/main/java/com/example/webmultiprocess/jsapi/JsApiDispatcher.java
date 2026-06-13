@@ -20,14 +20,14 @@ public final class JsApiDispatcher {
         String api = "";
         try {
             JSONObject request = new JSONObject(requestJson);
-            callbackId = request.optString(BridgeFields.CALLBACK_ID);
-            api = request.optString(BridgeFields.API);
+            callbackId = request.optString(JsApiContract.Field.CALLBACK_ID);
+            api = request.optString(JsApiContract.Field.API);
             if (TextUtils.isEmpty(callbackId)) {
                 return BridgeProtocol.response(
                         callbackId,
                         api,
                         false,
-                        BridgeCodes.INVALID_CALLBACK,
+                        JsApiContract.Code.INVALID_CALLBACK,
                         "callbackId is required.",
                         new JSONObject(),
                         processMode,
@@ -38,7 +38,7 @@ public final class JsApiDispatcher {
                         callbackId,
                         api,
                         false,
-                        BridgeCodes.INVALID_API,
+                        JsApiContract.Code.INVALID_API,
                         "api is required.",
                         new JSONObject(),
                         processMode,
@@ -51,7 +51,7 @@ public final class JsApiDispatcher {
                         callbackId,
                         api,
                         false,
-                        BridgeCodes.API_NOT_FOUND,
+                        JsApiContract.Code.API_NOT_FOUND,
                         "No JSAPI handler registered for " + api,
                         new JSONObject(),
                         processMode,
@@ -62,14 +62,14 @@ public final class JsApiDispatcher {
                         callbackId,
                         api,
                         false,
-                        BridgeCodes.PROCESS_UNAVAILABLE,
+                        JsApiContract.Code.PROCESS_UNAVAILABLE,
                         "Main process is unavailable and this JSAPI cannot run in local fallback.",
                         new JSONObject(),
                         processMode,
                         elapsed(startMs));
             }
 
-            JSONObject params = request.optJSONObject(BridgeFields.PARAMS);
+            JSONObject params = request.optJSONObject(JsApiContract.Field.PARAMS);
             if (params == null) {
                 params = new JSONObject();
             }
@@ -89,7 +89,7 @@ public final class JsApiDispatcher {
                     callbackId,
                     api,
                     false,
-                    BridgeCodes.BAD_JSON,
+                    JsApiContract.Code.BAD_JSON,
                     e.getMessage(),
                     new JSONObject(),
                     processMode,
@@ -99,7 +99,7 @@ public final class JsApiDispatcher {
                     callbackId,
                     api,
                     false,
-                    BridgeCodes.HANDLER_EXCEPTION,
+                    JsApiContract.Code.HANDLER_EXCEPTION,
                     e.getClass().getSimpleName() + ": " + e.getMessage(),
                     new JSONObject(),
                     processMode,

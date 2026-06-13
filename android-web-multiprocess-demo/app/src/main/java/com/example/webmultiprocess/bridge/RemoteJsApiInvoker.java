@@ -4,7 +4,7 @@ import android.content.Context;
 
 import com.example.webmultiprocess.ipc.InvokeJsApiTask;
 import com.example.webmultiprocess.ipc.MainProcessIPCService;
-import com.example.webmultiprocess.jsapi.BridgeCodes;
+import com.example.webmultiprocess.jsapi.JsApiContract;
 import com.example.webmultiprocess.jsapi.BridgeProtocol;
 
 import cc.suitalk.ipcinvoker.IPCInvokeCallback;
@@ -21,7 +21,7 @@ public class RemoteJsApiInvoker implements JsApiInvoker {
     public void invoke(final String requestJson, final Callback callback) {
         final String defaultResult = BridgeProtocol.errorResponse(
                 requestJson,
-                BridgeCodes.IPC_TIMEOUT,
+                JsApiContract.Code.IPC_TIMEOUT,
                 "IPCInvoker call to main process timed out.",
                 "web_to_main");
         try {
@@ -40,7 +40,7 @@ public class RemoteJsApiInvoker implements JsApiInvoker {
         } catch (Throwable throwable) {
             String response = BridgeProtocol.errorResponse(
                     requestJson,
-                    BridgeCodes.IPC_EXCEPTION,
+                    JsApiContract.Code.IPC_EXCEPTION,
                     throwable.getClass().getSimpleName() + ": " + throwable.getMessage(),
                     "web_to_main");
             completeOrFallback(requestJson, response, callback);
@@ -54,7 +54,7 @@ public class RemoteJsApiInvoker implements JsApiInvoker {
         if (responseJson == null) {
             responseJson = BridgeProtocol.errorResponse(
                     requestJson,
-                    BridgeCodes.IPC_NO_RESULT,
+                    JsApiContract.Code.IPC_NO_RESULT,
                     "IPCInvoker returned an empty result.",
                     "web_to_main");
         }

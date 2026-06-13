@@ -1,7 +1,5 @@
 package com.example.webmultiprocess.ui;
 
-import com.example.webmultiprocess.util.ProcessUtils;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -17,13 +15,13 @@ public final class UiCommandProtocol {
             long timeoutMs) {
         JSONObject json = new JSONObject();
         try {
-            json.put(UiCommandFields.COMMAND_ID, UiCommandConfigs.COMMAND_ID_PREFIX + System.currentTimeMillis());
-            json.put(UiCommandFields.PAGE_ID, pageId == null ? "" : pageId);
-            json.put(UiCommandFields.COMMAND, command == null ? "" : command);
-            json.put(UiCommandFields.SOURCE_API, sourceApi == null ? "" : sourceApi);
-            json.put(UiCommandFields.PAYLOAD, payload == null ? new JSONObject() : payload);
-            json.put(UiCommandFields.TIMEOUT_MS, timeoutMs);
-            json.put(UiCommandFields.TIMESTAMP, System.currentTimeMillis());
+            json.put(UiCommandContract.Field.COMMAND_ID, UiCommandContract.COMMAND_ID_PREFIX + System.currentTimeMillis());
+            json.put(UiCommandContract.Field.PAGE_ID, pageId == null ? "" : pageId);
+            json.put(UiCommandContract.Field.COMMAND, command == null ? "" : command);
+            json.put(UiCommandContract.Field.SOURCE_API, sourceApi == null ? "" : sourceApi);
+            json.put(UiCommandContract.Field.PAYLOAD, payload == null ? new JSONObject() : payload);
+            json.put(UiCommandContract.Field.TIMEOUT_MS, timeoutMs);
+            json.put(UiCommandContract.Field.TIMESTAMP, System.currentTimeMillis());
         } catch (JSONException ignored) {
         }
         return json.toString();
@@ -36,7 +34,7 @@ public final class UiCommandProtocol {
                 meta.pageId,
                 meta.command,
                 true,
-                UiCommandCodes.OK,
+                UiCommandContract.Code.OK,
                 "success",
                 data,
                 processName,
@@ -74,16 +72,16 @@ public final class UiCommandProtocol {
             long costMs) {
         JSONObject json = new JSONObject();
         try {
-            json.put(UiCommandFields.COMMAND_ID, commandId == null ? "" : commandId);
-            json.put(UiCommandFields.PAGE_ID, pageId == null ? "" : pageId);
-            json.put(UiCommandFields.COMMAND, command == null ? "" : command);
-            json.put(UiCommandFields.SUCCESS, success);
-            json.put(UiCommandFields.CODE, code == null ? "" : code);
-            json.put(UiCommandFields.MESSAGE, message == null ? "" : message);
-            json.put(UiCommandFields.DATA, data == null ? new JSONObject() : data);
-            json.put(UiCommandFields.PROCESS, processName == null ? "" : processName);
-            json.put(UiCommandFields.COST_MS, costMs);
-            json.put(UiCommandFields.TIMESTAMP, System.currentTimeMillis());
+            json.put(UiCommandContract.Field.COMMAND_ID, commandId == null ? "" : commandId);
+            json.put(UiCommandContract.Field.PAGE_ID, pageId == null ? "" : pageId);
+            json.put(UiCommandContract.Field.COMMAND, command == null ? "" : command);
+            json.put(UiCommandContract.Field.SUCCESS, success);
+            json.put(UiCommandContract.Field.CODE, code == null ? "" : code);
+            json.put(UiCommandContract.Field.MESSAGE, message == null ? "" : message);
+            json.put(UiCommandContract.Field.DATA, data == null ? new JSONObject() : data);
+            json.put(UiCommandContract.Field.PROCESS, processName == null ? "" : processName);
+            json.put(UiCommandContract.Field.COST_MS, costMs);
+            json.put(UiCommandContract.Field.TIMESTAMP, System.currentTimeMillis());
         } catch (JSONException ignored) {
         }
         return json.toString();
@@ -93,16 +91,12 @@ public final class UiCommandProtocol {
         Meta meta = new Meta();
         try {
             JSONObject json = new JSONObject(requestJson);
-            meta.commandId = json.optString(UiCommandFields.COMMAND_ID);
-            meta.pageId = json.optString(UiCommandFields.PAGE_ID);
-            meta.command = json.optString(UiCommandFields.COMMAND);
+            meta.commandId = json.optString(UiCommandContract.Field.COMMAND_ID);
+            meta.pageId = json.optString(UiCommandContract.Field.PAGE_ID);
+            meta.command = json.optString(UiCommandContract.Field.COMMAND);
         } catch (JSONException ignored) {
         }
         return meta;
-    }
-
-    static String processName(android.content.Context context) {
-        return ProcessUtils.currentProcessName(context);
     }
 
     static final class Meta {

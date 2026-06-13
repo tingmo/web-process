@@ -1,9 +1,9 @@
 package com.example.webmultiprocess.jsapi;
 
 public abstract class ConfiguredJsApiHandler implements JsApiHandler {
-    private final ApiConfig config;
+    private final JsApiContract.ApiSpec config;
 
-    protected ConfiguredJsApiHandler(ApiConfig config) {
+    protected ConfiguredJsApiHandler(JsApiContract.ApiSpec config) {
         this.config = config;
     }
 

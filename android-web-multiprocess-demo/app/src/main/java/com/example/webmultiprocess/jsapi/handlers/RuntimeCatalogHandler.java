@@ -1,6 +1,6 @@
 package com.example.webmultiprocess.jsapi.handlers;
 
-import com.example.webmultiprocess.jsapi.ApiConfigs;
+import com.example.webmultiprocess.jsapi.JsApiContract;
 import com.example.webmultiprocess.jsapi.BridgeProtocol;
 import com.example.webmultiprocess.jsapi.ConfiguredJsApiHandler;
 import com.example.webmultiprocess.jsapi.JsonUtils;
@@ -13,7 +13,7 @@ import org.json.JSONObject;
 
 public class RuntimeCatalogHandler extends ConfiguredJsApiHandler {
     public RuntimeCatalogHandler() {
-        super(ApiConfigs.RUNTIME_GET_API_CATALOG);
+        super(JsApiContract.RUNTIME_GET_API_CATALOG);
     }
 
     @Override

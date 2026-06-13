@@ -6,23 +6,19 @@ import org.json.JSONObject;
 
 public final class JsApiContext {
     private final Context context;
-    private final JSONObject request;
+    private final String pageId;
     private final String processMode;
     private final boolean localFallbackOnly;
 
     JsApiContext(Context context, JSONObject request, String processMode, boolean localFallbackOnly) {
         this.context = context.getApplicationContext();
-        this.request = request;
+        this.pageId = request.optString(JsApiContract.Field.PAGE_ID);
         this.processMode = processMode;
         this.localFallbackOnly = localFallbackOnly;
     }
 
     public Context getContext() {
         return context;
-    }
-
-    public JSONObject getRequest() {
-        return request;
     }
 
     public String getProcessMode() {
@@ -33,15 +29,7 @@ public final class JsApiContext {
         return localFallbackOnly;
     }
 
-    public String getPageUrl() {
-        return request.optString(BridgeFields.PAGE_URL);
-    }
-
     public String getPageId() {
-        return request.optString(BridgeFields.PAGE_ID);
-    }
-
-    public String getContainerMode() {
-        return request.optString(BridgeFields.CONTAINER_MODE);
+        return pageId;
     }
 }

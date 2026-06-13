@@ -36,7 +36,7 @@ public final class UiCommandClient {
 
     public static boolean isSuccess(String responseJson) {
         try {
-            return new JSONObject(responseJson).optBoolean(UiCommandFields.SUCCESS);
+            return new JSONObject(responseJson).optBoolean(UiCommandContract.Field.SUCCESS);
         } catch (JSONException ignored) {
             return false;
         }
@@ -45,7 +45,7 @@ public final class UiCommandClient {
     public static JSONObject data(String responseJson) {
         try {
             JSONObject response = new JSONObject(responseJson);
-            JSONObject data = response.optJSONObject(UiCommandFields.DATA);
+            JSONObject data = response.optJSONObject(UiCommandContract.Field.DATA);
             return data == null ? new JSONObject() : data;
         } catch (JSONException ignored) {
             return new JSONObject();
@@ -54,15 +54,15 @@ public final class UiCommandClient {
 
     public static String code(String responseJson) {
         try {
-            return new JSONObject(responseJson).optString(UiCommandFields.CODE);
+            return new JSONObject(responseJson).optString(UiCommandContract.Field.CODE);
         } catch (JSONException ignored) {
-            return UiCommandCodes.BAD_RESPONSE;
+            return UiCommandContract.Code.BAD_RESPONSE;
         }
     }
 
     public static String message(String responseJson) {
         try {
-            return new JSONObject(responseJson).optString(UiCommandFields.MESSAGE);
+            return new JSONObject(responseJson).optString(UiCommandContract.Field.MESSAGE);
         } catch (JSONException ignored) {
             return "Bad UI command response.";
         }
@@ -74,7 +74,7 @@ public final class UiCommandClient {
             long timeoutMs) {
         final CountDownLatch latch = new CountDownLatch(1);
         final AtomicReference<String> result = new AtomicReference<>();
-        UiCommandDispatcher.dispatch(context, commandJson, new UiCommandCallback() {
+        UiCommandDispatcher.dispatch(context, commandJson, new UiSession.Callback() {
             @Override
             public void onComplete(String responseJson) {
                 result.set(responseJson);
@@ -88,7 +88,7 @@ public final class UiCommandClient {
         }
         return UiCommandProtocol.error(
                 commandJson,
-                UiCommandCodes.TIMEOUT,
+                UiCommandContract.Code.TIMEOUT,
                 "Local UI command timed out.",
                 ProcessUtils.currentProcessName(context),
                 timeoutMs);
@@ -102,7 +102,7 @@ public final class UiCommandClient {
         final AtomicReference<String> result = new AtomicReference<>();
         final String defaultResult = UiCommandProtocol.error(
                 commandJson,
-                UiCommandCodes.TIMEOUT,
+                UiCommandContract.Code.TIMEOUT,
                 "IPCInvoker UI command call timed out.",
                 ProcessUtils.currentProcessName(context),
                 timeoutMs);
@@ -123,7 +123,7 @@ public final class UiCommandClient {
         } catch (Throwable throwable) {
             return UiCommandProtocol.error(
                     commandJson,
-                    UiCommandCodes.IPC_EXCEPTION,
+                    UiCommandContract.Code.IPC_EXCEPTION,
                     throwable.getClass().getSimpleName() + ": " + throwable.getMessage(),
                     ProcessUtils.currentProcessName(context),
                     0L);
@@ -135,7 +135,7 @@ public final class UiCommandClient {
 
     private static void await(CountDownLatch latch, long timeoutMs) {
         try {
-            latch.await(Math.max(UiCommandConfigs.MIN_TIMEOUT_MS, timeoutMs), TimeUnit.MILLISECONDS);
+            latch.await(Math.max(UiCommandContract.MIN_TIMEOUT_MS, timeoutMs), TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }

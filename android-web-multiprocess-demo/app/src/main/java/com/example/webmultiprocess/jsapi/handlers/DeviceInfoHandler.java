@@ -4,7 +4,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
-import com.example.webmultiprocess.jsapi.ApiConfigs;
+import com.example.webmultiprocess.jsapi.JsApiContract;
 import com.example.webmultiprocess.jsapi.ConfiguredJsApiHandler;
 import com.example.webmultiprocess.jsapi.JsonUtils;
 import com.example.webmultiprocess.jsapi.JsApiContext;
@@ -15,7 +15,7 @@ import org.json.JSONObject;
 
 public class DeviceInfoHandler extends ConfiguredJsApiHandler {
     public DeviceInfoHandler() {
-        super(ApiConfigs.DEVICE_GET_INFO);
+        super(JsApiContract.DEVICE_GET_INFO);
     }
 
     @Override

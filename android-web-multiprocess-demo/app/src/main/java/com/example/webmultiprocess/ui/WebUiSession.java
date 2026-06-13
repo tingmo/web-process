@@ -29,7 +29,7 @@ public class WebUiSession implements UiSession {
     }
 
     @Override
-    public void dispatchUiCommand(final String commandJson, final UiCommandCallback callback) {
+    public void dispatchUiCommand(final String commandJson, final UiSession.Callback callback) {
         mainHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -38,13 +38,13 @@ public class WebUiSession implements UiSession {
         });
     }
 
-    private void dispatchOnMainThread(String commandJson, UiCommandCallback callback) {
+    private void dispatchOnMainThread(String commandJson, UiSession.Callback callback) {
         long startMs = System.currentTimeMillis();
         Activity activity = activityRef.get();
         if (activity == null || activity.isFinishing()) {
             callback.onComplete(UiCommandProtocol.error(
                     commandJson,
-                    UiCommandCodes.ACTIVITY_UNAVAILABLE,
+                    UiCommandContract.Code.ACTIVITY_UNAVAILABLE,
                     "The UI host Activity is gone.",
                     processName(activity),
                     elapsed(startMs)));
@@ -53,21 +53,21 @@ public class WebUiSession implements UiSession {
 
         try {
             JSONObject request = new JSONObject(commandJson);
-            String command = request.optString(UiCommandFields.COMMAND);
-            if (UiCommandConfigs.DIALOG_CONFIRM.command().equals(command)) {
+            String command = request.optString(UiCommandContract.Field.COMMAND);
+            if (UiCommandContract.DIALOG_CONFIRM.command().equals(command)) {
                 showConfirmDialog(activity, commandJson, request, callback, startMs);
                 return;
             }
             callback.onComplete(UiCommandProtocol.error(
                     commandJson,
-                    UiCommandCodes.COMMAND_NOT_FOUND,
+                    UiCommandContract.Code.COMMAND_NOT_FOUND,
                     "Unsupported UI command: " + command,
                     processName(activity),
                     elapsed(startMs)));
         } catch (JSONException e) {
             callback.onComplete(UiCommandProtocol.error(
                     commandJson,
-                    UiCommandCodes.BAD_JSON,
+                    UiCommandContract.Code.BAD_JSON,
                     e.getMessage(),
                     processName(activity),
                     elapsed(startMs)));
@@ -78,17 +78,17 @@ public class WebUiSession implements UiSession {
             final Activity activity,
             final String commandJson,
             JSONObject request,
-            final UiCommandCallback callback,
+            final UiSession.Callback callback,
             final long startMs) {
-        JSONObject payload = request.optJSONObject(UiCommandFields.PAYLOAD);
+        JSONObject payload = request.optJSONObject(UiCommandContract.Field.PAYLOAD);
         if (payload == null) {
             payload = new JSONObject();
         }
-        UiCommandConfig config = UiCommandConfigs.DIALOG_CONFIRM;
-        String title = payload.optString(UiCommandFields.TITLE, config.defaultTitle());
-        String message = payload.optString(UiCommandFields.MESSAGE, config.defaultMessage());
-        String positive = payload.optString(UiCommandFields.POSITIVE_TEXT, config.defaultPositiveText());
-        String negative = payload.optString(UiCommandFields.NEGATIVE_TEXT, config.defaultNegativeText());
+        UiCommandContract.CommandSpec config = UiCommandContract.DIALOG_CONFIRM;
+        String title = payload.optString(UiCommandContract.Field.TITLE, config.defaultTitle());
+        String message = payload.optString(UiCommandContract.Field.MESSAGE, config.defaultMessage());
+        String positive = payload.optString(UiCommandContract.Field.POSITIVE_TEXT, config.defaultPositiveText());
+        String negative = payload.optString(UiCommandContract.Field.NEGATIVE_TEXT, config.defaultNegativeText());
 
         new AlertDialog.Builder(activity)
                 .setTitle(title)
@@ -129,8 +129,8 @@ public class WebUiSession implements UiSession {
     private JSONObject result(boolean confirmed) {
         JSONObject data = new JSONObject();
         try {
-            data.put(UiCommandFields.CONFIRMED, confirmed);
-            data.put(UiCommandFields.PAGE_ID, pageId);
+            data.put(UiCommandContract.Field.CONFIRMED, confirmed);
+            data.put(UiCommandContract.Field.PAGE_ID, pageId);
         } catch (JSONException ignored) {
         }
         return data;

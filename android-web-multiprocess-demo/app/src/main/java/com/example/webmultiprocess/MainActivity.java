@@ -2,7 +2,6 @@ package com.example.webmultiprocess;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
-import android.content.Intent;
 import android.graphics.Typeface;
 import android.os.Bundle;
 import android.view.Gravity;
@@ -32,20 +31,19 @@ public class MainActivity extends Activity {
         root.setPadding(dp(20), dp(20), dp(20), dp(20));
         scrollView.addView(root);
 
-        TextView title = text("Android Web 多进程 Demo", 24, true);
-        root.addView(title);
+        root.addView(text("Android Web Multiprocess Demo", 24, true));
 
         String mode = ProcessModeChooser.shouldUseMultiProcess(this)
-                ? "推荐启动: :web 子进程"
-                : "推荐启动: 主进程本地降级";
+                ? "Recommended: :web process"
+                : "Recommended: local fallback";
         TextView status = text(
-                "当前进程: " + ProcessUtils.currentProcessName(this) + "\n" + mode,
+                "Current process: " + ProcessUtils.currentProcessName(this) + "\n" + mode,
                 14,
                 false);
         status.setPadding(0, dp(8), 0, dp(18));
         root.addView(status);
 
-        Button recommended = button("按策略启动 Web 容器");
+        Button recommended = button("Open Web by strategy");
         recommended.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -58,7 +56,7 @@ public class MainActivity extends Activity {
         });
         root.addView(recommended);
 
-        Button multi = button("强制启动 :web 子进程");
+        Button multi = button("Force :web process");
         multi.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -67,7 +65,7 @@ public class MainActivity extends Activity {
         });
         root.addView(multi);
 
-        Button local = button("启动主进程本地降级");
+        Button local = button("Open local fallback");
         local.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -76,7 +74,7 @@ public class MainActivity extends Activity {
         });
         root.addView(local);
 
-        TextView section = text("已注册 JSAPI", 18, true);
+        TextView section = text("Registered JSAPI", 18, true);
         section.setPadding(0, dp(24), 0, dp(10));
         root.addView(section);
 

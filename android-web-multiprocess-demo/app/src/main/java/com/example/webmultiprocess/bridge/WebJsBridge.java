@@ -6,8 +6,7 @@ import android.os.Looper;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 
-import com.example.webmultiprocess.jsapi.BridgeCodes;
-import com.example.webmultiprocess.jsapi.BridgeFields;
+import com.example.webmultiprocess.jsapi.JsApiContract;
 import com.example.webmultiprocess.jsapi.BridgeProtocol;
 import com.example.webmultiprocess.util.ProcessUtils;
 
@@ -46,7 +45,7 @@ public class WebJsBridge {
                 dispatchToWeb(responseJson == null
                         ? BridgeProtocol.errorResponse(
                                 safeRequest,
-                                BridgeCodes.EMPTY_RESPONSE,
+                                JsApiContract.Code.EMPTY_RESPONSE,
                                 "Native returned empty response.",
                                 modeLabel)
                         : responseJson);
@@ -58,10 +57,10 @@ public class WebJsBridge {
     public String getBridgeInfo() {
         JSONObject json = new JSONObject();
         try {
-            json.put(BridgeFields.BRIDGE_VERSION, BridgeProtocol.BRIDGE_VERSION);
-            json.put(BridgeFields.MODE, modeLabel);
-            json.put(BridgeFields.PROCESS, ProcessUtils.currentProcessName(context));
-            json.put(BridgeFields.PAGE_ID, pageId);
+            json.put(JsApiContract.Field.BRIDGE_VERSION, BridgeProtocol.BRIDGE_VERSION);
+            json.put(JsApiContract.Field.MODE, modeLabel);
+            json.put(JsApiContract.Field.PROCESS, ProcessUtils.currentProcessName(context));
+            json.put(JsApiContract.Field.PAGE_ID, pageId);
         } catch (JSONException ignored) {
         }
         return json.toString();
@@ -70,11 +69,9 @@ public class WebJsBridge {
     private String enrichRequest(String requestJson) {
         try {
             JSONObject json = new JSONObject(requestJson);
-            if (!json.has(BridgeFields.PAGE_ID)) {
-                json.put(BridgeFields.PAGE_ID, pageId);
+            if (!json.has(JsApiContract.Field.PAGE_ID)) {
+                json.put(JsApiContract.Field.PAGE_ID, pageId);
             }
-            json.put(BridgeFields.CONTAINER_MODE, modeLabel);
-            json.put(BridgeFields.NATIVE_PROCESS, ProcessUtils.currentProcessName(context));
             return json.toString();
         } catch (JSONException ignored) {
             return requestJson;

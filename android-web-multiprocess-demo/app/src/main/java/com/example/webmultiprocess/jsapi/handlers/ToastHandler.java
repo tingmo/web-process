@@ -5,10 +5,8 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.widget.Toast;
 
-import com.example.webmultiprocess.jsapi.ApiConfigs;
-import com.example.webmultiprocess.jsapi.BridgeCodes;
+import com.example.webmultiprocess.jsapi.JsApiContract;
 import com.example.webmultiprocess.jsapi.ConfiguredJsApiHandler;
-import com.example.webmultiprocess.jsapi.DemoParams;
 import com.example.webmultiprocess.jsapi.JsonUtils;
 import com.example.webmultiprocess.jsapi.JsApiContext;
 import com.example.webmultiprocess.jsapi.JsApiResult;
@@ -17,17 +15,17 @@ import org.json.JSONObject;
 
 public class ToastHandler extends ConfiguredJsApiHandler {
     public ToastHandler() {
-        super(ApiConfigs.UI_TOAST);
+        super(JsApiContract.UI_TOAST);
     }
 
     @Override
     public JSONObject paramsSchema() {
         return JsonUtils.object(
                 "type", "object",
-                "required", JsonUtils.array(DemoParams.MESSAGE),
+                "required", JsonUtils.array(JsApiContract.Param.MESSAGE),
                 "properties", JsonUtils.object(
-                        DemoParams.MESSAGE, JsonUtils.object("type", "string"),
-                        DemoParams.LONG, JsonUtils.object("type", "boolean")));
+                        JsApiContract.Param.MESSAGE, JsonUtils.object("type", "string"),
+                        JsApiContract.Param.LONG, JsonUtils.object("type", "boolean")));
     }
 
     @Override
@@ -39,11 +37,11 @@ public class ToastHandler extends ConfiguredJsApiHandler {
 
     @Override
     public JsApiResult handle(final JsApiContext context, JSONObject params) {
-        final String message = params.optString(DemoParams.MESSAGE);
+        final String message = params.optString(JsApiContract.Param.MESSAGE);
         if (TextUtils.isEmpty(message)) {
-            return JsApiResult.error(BridgeCodes.INVALID_PARAM, "message is required.");
+            return JsApiResult.error(JsApiContract.Code.INVALID_PARAM, "message is required.");
         }
-        final int duration = params.optBoolean(DemoParams.LONG) ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT;
+        final int duration = params.optBoolean(JsApiContract.Param.LONG) ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT;
         new Handler(Looper.getMainLooper()).post(new Runnable() {
             @Override
             public void run() {

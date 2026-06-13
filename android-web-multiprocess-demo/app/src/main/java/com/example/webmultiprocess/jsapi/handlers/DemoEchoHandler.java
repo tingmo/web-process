@@ -1,8 +1,7 @@
 package com.example.webmultiprocess.jsapi.handlers;
 
-import com.example.webmultiprocess.jsapi.ApiConfigs;
+import com.example.webmultiprocess.jsapi.JsApiContract;
 import com.example.webmultiprocess.jsapi.ConfiguredJsApiHandler;
-import com.example.webmultiprocess.jsapi.DemoParams;
 import com.example.webmultiprocess.jsapi.JsonUtils;
 import com.example.webmultiprocess.jsapi.JsApiContext;
 import com.example.webmultiprocess.jsapi.JsApiResult;
@@ -12,7 +11,7 @@ import org.json.JSONObject;
 
 public class DemoEchoHandler extends ConfiguredJsApiHandler {
     public DemoEchoHandler() {
-        super(ApiConfigs.DEMO_ECHO);
+        super(JsApiContract.DEMO_ECHO);
     }
 
     @Override
@@ -20,8 +19,8 @@ public class DemoEchoHandler extends ConfiguredJsApiHandler {
         return JsonUtils.object(
                 "type", "object",
                 "properties", JsonUtils.object(
-                        DemoParams.MESSAGE, JsonUtils.object("type", "string"),
-                        DemoParams.PAYLOAD, JsonUtils.object("type", "object")));
+                        JsApiContract.Param.MESSAGE, JsonUtils.object("type", "string"),
+                        JsApiContract.Param.PAYLOAD, JsonUtils.object("type", "object")));
     }
 
     @Override
@@ -36,7 +35,7 @@ public class DemoEchoHandler extends ConfiguredJsApiHandler {
     @Override
     public JsApiResult handle(JsApiContext context, JSONObject params) {
         JSONObject data = JsonUtils.object(
-                DemoParams.ECHO, params,
+                JsApiContract.Param.ECHO, params,
                 "handledBy", ProcessUtils.currentProcessName(context.getContext()),
                 "processMode", context.getProcessMode(),
                 "standard", JsonUtils.object(

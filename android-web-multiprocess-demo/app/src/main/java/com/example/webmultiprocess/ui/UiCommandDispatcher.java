@@ -14,22 +14,22 @@ public final class UiCommandDispatcher {
     public static void dispatch(
             Context context,
             final String commandJson,
-            final UiCommandCallback callback) {
+            final UiSession.Callback callback) {
         final long startMs = System.currentTimeMillis();
         try {
             JSONObject request = new JSONObject(commandJson);
-            String pageId = request.optString(UiCommandFields.PAGE_ID);
+            String pageId = request.optString(UiCommandContract.Field.PAGE_ID);
             UiSession session = UiSessionRegistry.get(pageId);
             if (session == null) {
                 callback.onComplete(UiCommandProtocol.error(
                         commandJson,
-                        UiCommandCodes.CONTEXT_UNAVAILABLE,
+                        UiCommandContract.Code.CONTEXT_UNAVAILABLE,
                         "No live UI session for pageId=" + pageId,
                         ProcessUtils.currentProcessName(context),
                         elapsed(startMs)));
                 return;
             }
-            session.dispatchUiCommand(commandJson, new UiCommandCallback() {
+            session.dispatchUiCommand(commandJson, new UiSession.Callback() {
                 @Override
                 public void onComplete(String responseJson) {
                     callback.onComplete(responseJson);
@@ -38,7 +38,7 @@ public final class UiCommandDispatcher {
         } catch (JSONException e) {
             callback.onComplete(UiCommandProtocol.error(
                     commandJson,
-                    UiCommandCodes.BAD_JSON,
+                    UiCommandContract.Code.BAD_JSON,
                     e.getMessage(),
                     ProcessUtils.currentProcessName(context),
                     elapsed(startMs)));
