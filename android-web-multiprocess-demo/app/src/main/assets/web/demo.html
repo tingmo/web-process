@@ -199,6 +199,7 @@
             <button data-api="user.getProfile">主进程用户</button>
             <button data-api="ui.toast">Native Toast</button>
             <button data-api="demo.echo" class="secondary">标准 echo</button>
+            <button data-api="demo.confirmThenEcho" class="secondary">UICommand confirm</button>
           </div>
 
           <h2 style="margin-top: 18px">主进程存储</h2>
@@ -230,6 +231,7 @@
         const logEl = document.getElementById("log");
         const apiListEl = document.getElementById("apiList");
         const bridgeInfoEl = document.getElementById("bridgeInfo");
+        let bridgeInfo = {};
 
         function now() {
           return new Date().toLocaleTimeString();
@@ -247,6 +249,7 @@
           }
           try {
             const info = JSON.parse(window.NativeBridge.getBridgeInfo());
+            bridgeInfo = info;
             bridgeInfoEl.textContent = `Bridge ${info.bridgeVersion} | ${info.mode} | ${info.process}`;
           } catch (error) {
             bridgeInfoEl.textContent = `Bridge info parse failed: ${error.message}`;
@@ -287,6 +290,7 @@
                 api,
                 version: version || "1.0.0",
                 params: params || {},
+                pageId: bridgeInfo.pageId || "",
                 pageUrl: location.href,
                 bridgeVersion: "1.0.0",
                 timestamp: Date.now(),
@@ -341,6 +345,11 @@
                 ? { message: "Toast from WebView", long: false }
                 : api === "demo.echo"
                   ? { message: "standardized handler", payload: { from: "web" } }
+                  : api === "demo.confirmThenEcho"
+                    ? {
+                        message: "Main process handler asks the UI process to show this dialog.",
+                        payload: { from: "main_process_handler" },
+                      }
                   : {};
             invokeAndLog(api, params);
           });

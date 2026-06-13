@@ -36,4 +36,12 @@ public final class JsApiContext {
     public String getPageUrl() {
         return request.optString("pageUrl");
     }
+
+    public String getPageId() {
+        return request.optString("pageId");
+    }
+
+    public String getContainerMode() {
+        return request.optString("containerMode");
+    }
 }

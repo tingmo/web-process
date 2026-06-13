@@ -123,6 +123,7 @@ demo 默认在 `JsApiRegistry.installDefaultHandlers()` 中注册示例接口。
 - IPC 层只做跨进程转发，不放业务逻辑。
 - Dispatcher 层统一做参数校验、错误包装、耗时统计。
 - Handler 层只放单个 JSAPI 的业务实现。
+- 需要 UI 的主进程 Handler 只能通过 UICommand 请求 UI 进程，不直接依赖 Activity/Fragment。
 
 ## 标准化展示
 
@@ -137,3 +138,14 @@ demo 默认在 `JsApiRegistry.installDefaultHandlers()` 中注册示例接口。
 - `resultSchema`
 
 这些字段会被 `runtime.getApiCatalog` 输出给 Web，用于生成调试页、接口文档、灰度平台或自动化测试用例。
+
+## UI 相关接口
+
+如果接口需要 `Activity`、`Fragment`、`View`、`WebView`：
+
+- 纯 UI 接口留在 Web/UI 进程执行。
+- 主进程业务接口通过 `UiCommandClient` 发送 `pageId + command + payload`。
+- UI 进程通过 `UiSessionRegistry` 查找页面宿主。
+- 找不到页面宿主时返回 `UI_CONTEXT_UNAVAILABLE`。
+
+完整设计见 [UICOMMAND_DESIGN.md](UICOMMAND_DESIGN.md)。

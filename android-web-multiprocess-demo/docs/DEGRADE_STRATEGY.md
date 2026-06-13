@@ -35,6 +35,7 @@
 | 调试/目录 | `runtime.getApiCatalog` | false | true |
 | 账号态 | `user.getProfile` | true | false |
 | 主进程存储 | `storage.get` / `storage.set` | true | false |
+| 主进程业务 + UI 动作 | `demo.confirmThenEcho` | true | false |
 | 支付、权限、风控 | 后续业务接口 | true | false |
 
 ## 进程恢复
@@ -52,3 +53,4 @@
 - 对高风险 API 加调用白名单和来源校验。
 - 为重要 API 增加幂等 id，避免 IPC 重试导致重复执行。
 - 对 Web 子进程内存、ANR、renderer crash 做单独埋点。
+- 主进程需要 UI 时走 UICommand；不要缓存或跨进程传递 Activity/Fragment/View。

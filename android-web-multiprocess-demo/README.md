@@ -55,9 +55,11 @@ flowchart LR
 | `storage.set` | 写主进程 SharedPreferences | 是 | 否 |
 | `storage.get` | 读主进程 SharedPreferences | 是 | 否 |
 | `demo.echo` | 后续接口实现模板 | 否 | 是 |
+| `demo.confirmThenEcho` | 主进程业务通过 UICommand 请求 UI 进程弹确认框 | 是 | 否 |
 
 更多实现规范见 [docs/JSAPI_STANDARD.md](docs/JSAPI_STANDARD.md)。
 降级策略见 [docs/DEGRADE_STRATEGY.md](docs/DEGRADE_STRATEGY.md)。
+UICommand 反向 UI 调用设计见 [docs/UICOMMAND_DESIGN.md](docs/UICOMMAND_DESIGN.md)。
 
 ## 关键文件
 
@@ -66,4 +68,5 @@ flowchart LR
 - `app/src/main/java/com/example/webmultiprocess/bridge`: Web JSBridge、远程/本地 Invoker。
 - `app/src/main/java/com/example/webmultiprocess/jsapi`: JSAPI 协议、派发器、注册表。
 - `app/src/main/java/com/example/webmultiprocess/jsapi/handlers`: 标准化接口示例。
+- `app/src/main/java/com/example/webmultiprocess/ui`: UICommand 协议、会话注册、反向 UI 命令分发。
 - `app/src/main/assets/web/demo.html`: Web 侧 Promise 调用封装与测试页面。

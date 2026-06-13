@@ -20,17 +20,24 @@ public class WebJsBridge {
     private final JsApiInvoker invoker;
     private final Handler mainHandler = new Handler(Looper.getMainLooper());
     private final String modeLabel;
+    private final String pageId;
 
-    public WebJsBridge(Context context, WebView webView, JsApiInvoker invoker, String modeLabel) {
+    public WebJsBridge(
+            Context context,
+            WebView webView,
+            JsApiInvoker invoker,
+            String modeLabel,
+            String pageId) {
         this.context = context.getApplicationContext();
         this.webViewRef = new WeakReference<>(webView);
         this.invoker = invoker;
         this.modeLabel = modeLabel;
+        this.pageId = pageId;
     }
 
     @JavascriptInterface
     public void postMessage(String requestJson) {
-        final String safeRequest = requestJson == null ? "{}" : requestJson;
+        final String safeRequest = enrichRequest(requestJson == null ? "{}" : requestJson);
         invoker.invoke(safeRequest, new JsApiInvoker.Callback() {
             @Override
             public void onComplete(String responseJson) {
@@ -48,9 +55,24 @@ public class WebJsBridge {
             json.put("bridgeVersion", BridgeProtocol.BRIDGE_VERSION);
             json.put("mode", modeLabel);
             json.put("process", ProcessUtils.currentProcessName(context));
+            json.put("pageId", pageId);
         } catch (JSONException ignored) {
         }
         return json.toString();
+    }
+
+    private String enrichRequest(String requestJson) {
+        try {
+            JSONObject json = new JSONObject(requestJson);
+            if (!json.has("pageId")) {
+                json.put("pageId", pageId);
+            }
+            json.put("containerMode", modeLabel);
+            json.put("nativeProcess", ProcessUtils.currentProcessName(context));
+            return json.toString();
+        } catch (JSONException ignored) {
+            return requestJson;
+        }
     }
 
     private void dispatchToWeb(final String responseJson) {

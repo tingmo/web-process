@@ -1,6 +1,7 @@
 package com.example.webmultiprocess.jsapi;
 
 import com.example.webmultiprocess.jsapi.handlers.DemoEchoHandler;
+import com.example.webmultiprocess.jsapi.handlers.ConfirmThenEchoHandler;
 import com.example.webmultiprocess.jsapi.handlers.DeviceInfoHandler;
 import com.example.webmultiprocess.jsapi.handlers.RuntimeCatalogHandler;
 import com.example.webmultiprocess.jsapi.handlers.StorageGetHandler;
@@ -35,6 +36,7 @@ public final class JsApiRegistry {
         register(new StorageGetHandler());
         register(new UserProfileHandler());
         register(new DemoEchoHandler());
+        register(new ConfirmThenEchoHandler());
         installed = true;
     }
 

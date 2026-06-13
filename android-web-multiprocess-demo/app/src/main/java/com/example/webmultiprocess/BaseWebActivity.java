@@ -18,11 +18,14 @@ import android.widget.TextView;
 
 import com.example.webmultiprocess.bridge.JsApiInvoker;
 import com.example.webmultiprocess.bridge.WebJsBridge;
+import com.example.webmultiprocess.ui.UiSessionRegistry;
+import com.example.webmultiprocess.ui.WebUiSession;
 import com.example.webmultiprocess.util.ProcessUtils;
 
 public abstract class BaseWebActivity extends Activity {
     private WebView webView;
     private LinearLayout root;
+    private String pageId;
 
     protected abstract JsApiInvoker createJsApiInvoker();
 
@@ -33,6 +36,7 @@ public abstract class BaseWebActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        pageId = createPageId();
         root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         setContentView(root);
@@ -42,6 +46,7 @@ public abstract class BaseWebActivity extends Activity {
 
     @Override
     protected void onDestroy() {
+        UiSessionRegistry.unregister(pageId);
         if (webView != null) {
             webView.removeJavascriptInterface("NativeBridge");
             webView.stopLoading();
@@ -97,12 +102,17 @@ public abstract class BaseWebActivity extends Activity {
         webView.removeJavascriptInterface("searchBoxJavaBridge_");
         webView.removeJavascriptInterface("accessibility");
         webView.removeJavascriptInterface("accessibilityTraversal");
+        UiSessionRegistry.register(new WebUiSession(pageId, this));
         webView.addJavascriptInterface(
-                new WebJsBridge(this, webView, createJsApiInvoker(), modeLabel()),
+                new WebJsBridge(this, webView, createJsApiInvoker(), modeLabel(), pageId),
                 "NativeBridge");
         webView.setWebChromeClient(new WebChromeClient());
         webView.setWebViewClient(new DemoWebViewClient());
         webView.loadUrl("file:///android_asset/web/demo.html?mode=" + Uri.encode(modeLabel()));
+    }
+
+    private String createPageId() {
+        return "page_" + System.currentTimeMillis() + "_" + Integer.toHexString(System.identityHashCode(this));
     }
 
     private int dp(int value) {
