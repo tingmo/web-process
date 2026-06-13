@@ -67,6 +67,9 @@ flowchart LR
 ## Demo 对应代码
 
 - `ui/UiCommandProtocol.java`: UICommand 请求和响应协议。
+- `ui/UiCommandConfigs.java`: UICommand 名称、默认文案和超时配置。
+- `ui/UiCommandFields.java`: UICommand 请求和响应字段。
+- `ui/UiCommandCodes.java`: UICommand 错误码。
 - `ui/UiSessionRegistry.java`: 当前进程内的 `pageId -> UiSession` 注册表。
 - `ui/WebUiSession.java`: 持有 Activity 弱引用，只在 UI 进程内执行弹窗。
 - `ui/UiCommandClient.java`: 主进程同步等待 UICommand 结果。
@@ -96,3 +99,30 @@ bridge.getContext()
 - 主进程 Handler 只拿 `Application Context`。
 - UI 进程 Handler 或 `WebUiSession` 才能拿 `Activity/Fragment`。
 - 如果 `pageId` 找不到 UI session，返回 `UI_CONTEXT_UNAVAILABLE`。
+
+## 配置化约束
+
+新增 UICommand 不要在 handler 里裸写命令字符串。先增加配置：
+
+```java
+public static final UiCommandConfig DIALOG_CONFIRM = new UiCommandConfig(
+        "dialog.confirm",
+        6000L,
+        "UICommand from main process",
+        "The JSAPI handler is running in main process and asks UI process to confirm.",
+        "Confirm",
+        "Cancel");
+```
+
+业务 handler 只引用配置：
+
+```java
+UiCommandConfig confirmConfig = UiCommandConfigs.DIALOG_CONFIRM;
+UiCommandClient.dispatchSync(
+        context.getContext(),
+        pageId,
+        confirmConfig.command(),
+        name(),
+        uiPayload,
+        confirmConfig.timeoutMs());
+```

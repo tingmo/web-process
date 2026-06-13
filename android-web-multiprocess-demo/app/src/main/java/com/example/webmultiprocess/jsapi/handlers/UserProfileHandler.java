@@ -1,37 +1,18 @@
 package com.example.webmultiprocess.jsapi.handlers;
 
+import com.example.webmultiprocess.jsapi.ApiConfigs;
+import com.example.webmultiprocess.jsapi.ConfiguredJsApiHandler;
+import com.example.webmultiprocess.jsapi.DemoUserConfig;
 import com.example.webmultiprocess.jsapi.JsonUtils;
 import com.example.webmultiprocess.jsapi.JsApiContext;
-import com.example.webmultiprocess.jsapi.JsApiHandler;
 import com.example.webmultiprocess.jsapi.JsApiResult;
 import com.example.webmultiprocess.util.ProcessUtils;
 
 import org.json.JSONObject;
 
-public class UserProfileHandler implements JsApiHandler {
-    @Override
-    public String name() {
-        return "user.getProfile";
-    }
-
-    @Override
-    public String version() {
-        return "1.0.0";
-    }
-
-    @Override
-    public String description() {
-        return "Return a mocked login profile owned by the main process.";
-    }
-
-    @Override
-    public boolean mainProcessOnly() {
-        return true;
-    }
-
-    @Override
-    public boolean allowLocalFallback() {
-        return false;
+public class UserProfileHandler extends ConfiguredJsApiHandler {
+    public UserProfileHandler() {
+        super(ApiConfigs.USER_GET_PROFILE);
     }
 
     @Override
@@ -52,10 +33,13 @@ public class UserProfileHandler implements JsApiHandler {
     @Override
     public JsApiResult handle(JsApiContext context, JSONObject params) {
         JSONObject data = JsonUtils.object(
-                "userId", "demo-user-10001",
-                "nickname", "IPCInvoker Demo User",
-                "loginState", "mocked",
-                "scopes", JsonUtils.array("profile", "storage", "toast"),
+                "userId", DemoUserConfig.USER_ID,
+                "nickname", DemoUserConfig.NICKNAME,
+                "loginState", DemoUserConfig.LOGIN_STATE,
+                "scopes", JsonUtils.array(
+                        DemoUserConfig.SCOPE_PROFILE,
+                        DemoUserConfig.SCOPE_STORAGE,
+                        DemoUserConfig.SCOPE_TOAST),
                 "ownerProcess", ProcessUtils.currentProcessName(context.getContext()));
         return JsApiResult.success(data);
     }

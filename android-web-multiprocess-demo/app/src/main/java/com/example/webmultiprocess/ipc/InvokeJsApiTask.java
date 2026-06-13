@@ -3,6 +3,7 @@ package com.example.webmultiprocess.ipc;
 import android.content.Context;
 
 import com.example.webmultiprocess.DemoApplication;
+import com.example.webmultiprocess.jsapi.BridgeCodes;
 import com.example.webmultiprocess.jsapi.BridgeProtocol;
 import com.example.webmultiprocess.jsapi.JsApiDispatcher;
 
@@ -17,7 +18,7 @@ public class InvokeJsApiTask implements IPCAsyncInvokeTask<String, String> {
         if (context == null) {
             response = BridgeProtocol.errorResponse(
                     requestJson,
-                    "APP_CONTEXT_MISSING",
+                    BridgeCodes.APP_CONTEXT_MISSING,
                     "Main process application context is unavailable.",
                     "main");
         } else {

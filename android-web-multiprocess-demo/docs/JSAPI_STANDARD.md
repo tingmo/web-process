@@ -62,33 +62,25 @@
 
 ## 实现方模板
 
-新增接口只需要实现 `JsApiHandler` 并注册：
+新增接口先声明配置，再实现 handler。
+
+配置位置：
 
 ```java
-public class DemoEchoHandler implements JsApiHandler {
-    @Override
-    public String name() {
-        return "demo.echo";
-    }
+public static final ApiConfig DEMO_ECHO = new ApiConfig(
+        "demo.echo",
+        VERSION_1,
+        "A standard handler template for future JSAPI implementers.",
+        false,
+        true);
+```
 
-    @Override
-    public String version() {
-        return "1.0.0";
-    }
+Handler 继承 `ConfiguredJsApiHandler`：
 
-    @Override
-    public String description() {
-        return "A standard handler template for future JSAPI implementers.";
-    }
-
-    @Override
-    public boolean mainProcessOnly() {
-        return false;
-    }
-
-    @Override
-    public boolean allowLocalFallback() {
-        return true;
+```java
+public class DemoEchoHandler extends ConfiguredJsApiHandler {
+    public DemoEchoHandler() {
+        super(ApiConfigs.DEMO_ECHO);
     }
 
     @Override
@@ -115,6 +107,13 @@ JsApiRegistry.register(new DemoEchoHandler());
 ```
 
 demo 默认在 `JsApiRegistry.installDefaultHandlers()` 中注册示例接口。
+
+约束：
+
+- 不在 handler 里硬编码 API 名、版本、描述和进程策略。
+- 请求/响应字段使用 `BridgeFields`。
+- 错误码使用 `BridgeCodes`。
+- 常用参数名放入类似 `DemoParams` 的参数常量类。
 
 ## 接口分层建议
 

@@ -4,6 +4,7 @@ import android.content.Context;
 
 import com.example.webmultiprocess.DemoApplication;
 import com.example.webmultiprocess.ui.UiCommandCallback;
+import com.example.webmultiprocess.ui.UiCommandCodes;
 import com.example.webmultiprocess.ui.UiCommandDispatcher;
 import com.example.webmultiprocess.ui.UiCommandProtocol;
 
@@ -17,7 +18,7 @@ public class InvokeUiCommandTask implements IPCAsyncInvokeTask<String, String> {
         if (context == null) {
             callback.onCallback(UiCommandProtocol.error(
                     commandJson,
-                    "APP_CONTEXT_MISSING",
+                    UiCommandCodes.APP_CONTEXT_MISSING,
                     "Web process application context is unavailable.",
                     "",
                     0L));

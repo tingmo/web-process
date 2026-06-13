@@ -66,7 +66,17 @@ UICommand 反向 UI 调用设计见 [docs/UICOMMAND_DESIGN.md](docs/UICOMMAND_DE
 - `app/src/main/java/com/example/webmultiprocess/DemoApplication.java`: IPCInvoker 初始化。
 - `app/src/main/java/com/example/webmultiprocess/ipc`: IPCInvoker Service 和跨进程 Task。
 - `app/src/main/java/com/example/webmultiprocess/bridge`: Web JSBridge、远程/本地 Invoker。
-- `app/src/main/java/com/example/webmultiprocess/jsapi`: JSAPI 协议、派发器、注册表。
+- `app/src/main/java/com/example/webmultiprocess/jsapi`: JSAPI 协议、派发器、注册表、接口配置。
 - `app/src/main/java/com/example/webmultiprocess/jsapi/handlers`: 标准化接口示例。
 - `app/src/main/java/com/example/webmultiprocess/ui`: UICommand 协议、会话注册、反向 UI 命令分发。
 - `app/src/main/assets/web/demo.html`: Web 侧 Promise 调用封装与测试页面。
+
+## 配置化约束
+
+协议字段、错误码、JSAPI 名称、UICommand 名称和默认 UI 文案集中声明：
+
+- `ApiConfigs`: JSAPI 名称、版本、描述、进程亲和性。
+- `BridgeFields` / `BridgeCodes`: JSBridge 请求响应字段和错误码。
+- `UiCommandConfigs`: UICommand 名称、超时、默认弹窗文案。
+- `UiCommandFields` / `UiCommandCodes`: UICommand 请求响应字段和错误码。
+- Web demo 页通过 `API_CONFIG` 渲染按钮和默认参数，不在按钮 DOM 上散落 API 字符串。

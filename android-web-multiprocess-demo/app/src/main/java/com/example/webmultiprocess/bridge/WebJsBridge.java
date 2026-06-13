@@ -6,6 +6,8 @@ import android.os.Looper;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebView;
 
+import com.example.webmultiprocess.jsapi.BridgeCodes;
+import com.example.webmultiprocess.jsapi.BridgeFields;
 import com.example.webmultiprocess.jsapi.BridgeProtocol;
 import com.example.webmultiprocess.util.ProcessUtils;
 
@@ -42,7 +44,11 @@ public class WebJsBridge {
             @Override
             public void onComplete(String responseJson) {
                 dispatchToWeb(responseJson == null
-                        ? BridgeProtocol.errorResponse(safeRequest, "EMPTY_RESPONSE", "Native returned empty response.", modeLabel)
+                        ? BridgeProtocol.errorResponse(
+                                safeRequest,
+                                BridgeCodes.EMPTY_RESPONSE,
+                                "Native returned empty response.",
+                                modeLabel)
                         : responseJson);
             }
         });
@@ -52,10 +58,10 @@ public class WebJsBridge {
     public String getBridgeInfo() {
         JSONObject json = new JSONObject();
         try {
-            json.put("bridgeVersion", BridgeProtocol.BRIDGE_VERSION);
-            json.put("mode", modeLabel);
-            json.put("process", ProcessUtils.currentProcessName(context));
-            json.put("pageId", pageId);
+            json.put(BridgeFields.BRIDGE_VERSION, BridgeProtocol.BRIDGE_VERSION);
+            json.put(BridgeFields.MODE, modeLabel);
+            json.put(BridgeFields.PROCESS, ProcessUtils.currentProcessName(context));
+            json.put(BridgeFields.PAGE_ID, pageId);
         } catch (JSONException ignored) {
         }
         return json.toString();
@@ -64,11 +70,11 @@ public class WebJsBridge {
     private String enrichRequest(String requestJson) {
         try {
             JSONObject json = new JSONObject(requestJson);
-            if (!json.has("pageId")) {
-                json.put("pageId", pageId);
+            if (!json.has(BridgeFields.PAGE_ID)) {
+                json.put(BridgeFields.PAGE_ID, pageId);
             }
-            json.put("containerMode", modeLabel);
-            json.put("nativeProcess", ProcessUtils.currentProcessName(context));
+            json.put(BridgeFields.CONTAINER_MODE, modeLabel);
+            json.put(BridgeFields.NATIVE_PROCESS, ProcessUtils.currentProcessName(context));
             return json.toString();
         } catch (JSONException ignored) {
             return requestJson;

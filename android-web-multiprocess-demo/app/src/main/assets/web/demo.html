@@ -193,14 +193,7 @@
       <div class="grid">
         <section class="panel">
           <h2>调用区</h2>
-          <div class="actions">
-            <button data-api="runtime.getApiCatalog">刷新接口目录</button>
-            <button data-api="device.getInfo">设备信息</button>
-            <button data-api="user.getProfile">主进程用户</button>
-            <button data-api="ui.toast">Native Toast</button>
-            <button data-api="demo.echo" class="secondary">标准 echo</button>
-            <button data-api="demo.confirmThenEcho" class="secondary">UICommand confirm</button>
-          </div>
+          <div id="actionButtons" class="actions"></div>
 
           <h2 style="margin-top: 18px">主进程存储</h2>
           <div class="form-row">
@@ -208,8 +201,8 @@
             <input id="storageValue" value="hello from web" aria-label="storage value" />
           </div>
           <div class="actions">
-            <button id="setStorage">storage.set</button>
-            <button id="getStorage" class="secondary">storage.get</button>
+            <button id="setStorage">Save value</button>
+            <button id="getStorage" class="secondary">Read value</button>
           </div>
         </section>
 
@@ -231,7 +224,56 @@
         const logEl = document.getElementById("log");
         const apiListEl = document.getElementById("apiList");
         const bridgeInfoEl = document.getElementById("bridgeInfo");
+        const actionButtonsEl = document.getElementById("actionButtons");
         let bridgeInfo = {};
+
+        const BRIDGE_FIELDS = {
+          callbackId: "callbackId",
+          api: "api",
+          version: "version",
+          params: "params",
+          pageId: "pageId",
+          pageUrl: "pageUrl",
+          bridgeVersion: "bridgeVersion",
+          timestamp: "timestamp",
+        };
+
+        const API = {
+          catalog: "runtime.getApiCatalog",
+          deviceInfo: "device.getInfo",
+          userProfile: "user.getProfile",
+          toast: "ui.toast",
+          echo: "demo.echo",
+          confirmThenEcho: "demo.confirmThenEcho",
+          storageSet: "storage.set",
+          storageGet: "storage.get",
+        };
+
+        const API_CONFIG = [
+          { api: API.catalog, label: "刷新接口目录" },
+          { api: API.deviceInfo, label: "设备信息" },
+          { api: API.userProfile, label: "主进程用户" },
+          {
+            api: API.toast,
+            label: "Native Toast",
+            params: { message: "Toast from WebView", long: false },
+          },
+          {
+            api: API.echo,
+            label: "标准 echo",
+            secondary: true,
+            params: { message: "standardized handler", payload: { from: "web" } },
+          },
+          {
+            api: API.confirmThenEcho,
+            label: "UICommand confirm",
+            secondary: true,
+            params: {
+              message: "Main process handler asks the UI process to show this dialog.",
+              payload: { from: "main_process_handler" },
+            },
+          },
+        ];
 
         function now() {
           return new Date().toLocaleTimeString();
@@ -285,16 +327,15 @@
               }
               const callbackId = `cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
               pending.set(callbackId, { api, resolve, reject });
-              const request = {
-                callbackId,
-                api,
-                version: version || "1.0.0",
-                params: params || {},
-                pageId: bridgeInfo.pageId || "",
-                pageUrl: location.href,
-                bridgeVersion: "1.0.0",
-                timestamp: Date.now(),
-              };
+              const request = {};
+              request[BRIDGE_FIELDS.callbackId] = callbackId;
+              request[BRIDGE_FIELDS.api] = api;
+              request[BRIDGE_FIELDS.version] = version || "1.0.0";
+              request[BRIDGE_FIELDS.params] = params || {};
+              request[BRIDGE_FIELDS.pageId] = bridgeInfo.pageId || "";
+              request[BRIDGE_FIELDS.pageUrl] = location.href;
+              request[BRIDGE_FIELDS.bridgeVersion] = "1.0.0";
+              request[BRIDGE_FIELDS.timestamp] = Date.now();
               window.NativeBridge.postMessage(JSON.stringify(request));
               setTimeout(() => {
                 if (pending.has(callbackId)) {
@@ -320,7 +361,7 @@
             pending.delete(response.callbackId);
             callback.resolve(response);
             log(response.api || callback.api, response);
-            if (response.api === "runtime.getApiCatalog" && response.success) {
+            if (response.api === API.catalog && response.success) {
               renderCatalog(response.data.apis || []);
             }
           },
@@ -337,39 +378,36 @@
           }
         }
 
-        document.querySelectorAll("button[data-api]").forEach((button) => {
-          button.addEventListener("click", () => {
-            const api = button.dataset.api;
-            const params =
-              api === "ui.toast"
-                ? { message: "Toast from WebView", long: false }
-                : api === "demo.echo"
-                  ? { message: "standardized handler", payload: { from: "web" } }
-                  : api === "demo.confirmThenEcho"
-                    ? {
-                        message: "Main process handler asks the UI process to show this dialog.",
-                        payload: { from: "main_process_handler" },
-                      }
-                  : {};
-            invokeAndLog(api, params);
+        function renderActionButtons() {
+          actionButtonsEl.innerHTML = "";
+          API_CONFIG.forEach((item) => {
+            const button = document.createElement("button");
+            button.type = "button";
+            button.textContent = item.label;
+            if (item.secondary) {
+              button.className = "secondary";
+            }
+            button.addEventListener("click", () => invokeAndLog(item.api, item.params || {}));
+            actionButtonsEl.appendChild(button);
           });
-        });
+        }
 
         document.getElementById("setStorage").addEventListener("click", () => {
-          invokeAndLog("storage.set", {
+          invokeAndLog(API.storageSet, {
             key: document.getElementById("storageKey").value,
             value: document.getElementById("storageValue").value,
           });
         });
 
         document.getElementById("getStorage").addEventListener("click", () => {
-          invokeAndLog("storage.get", {
+          invokeAndLog(API.storageGet, {
             key: document.getElementById("storageKey").value,
           });
         });
 
+        renderActionButtons();
         renderBridgeInfo();
-        invokeAndLog("runtime.getApiCatalog", {});
+        invokeAndLog(API.catalog, {});
       })();
     </script>
   </body>

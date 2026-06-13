@@ -6,8 +6,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 public final class UiCommandProtocol {
-    public static final String COMMAND_DIALOG_CONFIRM = "dialog.confirm";
-
     private UiCommandProtocol() {
     }
 
@@ -19,13 +17,13 @@ public final class UiCommandProtocol {
             long timeoutMs) {
         JSONObject json = new JSONObject();
         try {
-            json.put("commandId", "cmd_" + System.currentTimeMillis());
-            json.put("pageId", pageId == null ? "" : pageId);
-            json.put("command", command == null ? "" : command);
-            json.put("sourceApi", sourceApi == null ? "" : sourceApi);
-            json.put("payload", payload == null ? new JSONObject() : payload);
-            json.put("timeoutMs", timeoutMs);
-            json.put("timestamp", System.currentTimeMillis());
+            json.put(UiCommandFields.COMMAND_ID, UiCommandConfigs.COMMAND_ID_PREFIX + System.currentTimeMillis());
+            json.put(UiCommandFields.PAGE_ID, pageId == null ? "" : pageId);
+            json.put(UiCommandFields.COMMAND, command == null ? "" : command);
+            json.put(UiCommandFields.SOURCE_API, sourceApi == null ? "" : sourceApi);
+            json.put(UiCommandFields.PAYLOAD, payload == null ? new JSONObject() : payload);
+            json.put(UiCommandFields.TIMEOUT_MS, timeoutMs);
+            json.put(UiCommandFields.TIMESTAMP, System.currentTimeMillis());
         } catch (JSONException ignored) {
         }
         return json.toString();
@@ -38,7 +36,7 @@ public final class UiCommandProtocol {
                 meta.pageId,
                 meta.command,
                 true,
-                "OK",
+                UiCommandCodes.OK,
                 "success",
                 data,
                 processName,
@@ -76,16 +74,16 @@ public final class UiCommandProtocol {
             long costMs) {
         JSONObject json = new JSONObject();
         try {
-            json.put("commandId", commandId == null ? "" : commandId);
-            json.put("pageId", pageId == null ? "" : pageId);
-            json.put("command", command == null ? "" : command);
-            json.put("success", success);
-            json.put("code", code == null ? "" : code);
-            json.put("message", message == null ? "" : message);
-            json.put("data", data == null ? new JSONObject() : data);
-            json.put("process", processName == null ? "" : processName);
-            json.put("costMs", costMs);
-            json.put("timestamp", System.currentTimeMillis());
+            json.put(UiCommandFields.COMMAND_ID, commandId == null ? "" : commandId);
+            json.put(UiCommandFields.PAGE_ID, pageId == null ? "" : pageId);
+            json.put(UiCommandFields.COMMAND, command == null ? "" : command);
+            json.put(UiCommandFields.SUCCESS, success);
+            json.put(UiCommandFields.CODE, code == null ? "" : code);
+            json.put(UiCommandFields.MESSAGE, message == null ? "" : message);
+            json.put(UiCommandFields.DATA, data == null ? new JSONObject() : data);
+            json.put(UiCommandFields.PROCESS, processName == null ? "" : processName);
+            json.put(UiCommandFields.COST_MS, costMs);
+            json.put(UiCommandFields.TIMESTAMP, System.currentTimeMillis());
         } catch (JSONException ignored) {
         }
         return json.toString();
@@ -95,9 +93,9 @@ public final class UiCommandProtocol {
         Meta meta = new Meta();
         try {
             JSONObject json = new JSONObject(requestJson);
-            meta.commandId = json.optString("commandId");
-            meta.pageId = json.optString("pageId");
-            meta.command = json.optString("command");
+            meta.commandId = json.optString(UiCommandFields.COMMAND_ID);
+            meta.pageId = json.optString(UiCommandFields.PAGE_ID);
+            meta.command = json.optString(UiCommandFields.COMMAND);
         } catch (JSONException ignored) {
         }
         return meta;

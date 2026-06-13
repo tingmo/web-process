@@ -34,14 +34,14 @@ public final class JsApiContext {
     }
 
     public String getPageUrl() {
-        return request.optString("pageUrl");
+        return request.optString(BridgeFields.PAGE_URL);
     }
 
     public String getPageId() {
-        return request.optString("pageId");
+        return request.optString(BridgeFields.PAGE_ID);
     }
 
     public String getContainerMode() {
-        return request.optString("containerMode");
+        return request.optString(BridgeFields.CONTAINER_MODE);
     }
 }

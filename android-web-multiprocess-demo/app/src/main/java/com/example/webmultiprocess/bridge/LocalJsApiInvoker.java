@@ -3,6 +3,8 @@ package com.example.webmultiprocess.bridge;
 import android.content.Context;
 
 import com.example.webmultiprocess.jsapi.BridgeProtocol;
+import com.example.webmultiprocess.jsapi.BridgeCodes;
+import com.example.webmultiprocess.jsapi.BridgeFields;
 import com.example.webmultiprocess.jsapi.JsApiDispatcher;
 import com.example.webmultiprocess.jsapi.JsApiRegistry;
 
@@ -41,7 +43,7 @@ public class LocalJsApiInvoker implements JsApiInvoker {
     public boolean canHandleRequest(String requestJson) {
         try {
             JSONObject request = new JSONObject(requestJson);
-            return JsApiRegistry.allowLocalFallback(request.optString("api"));
+            return JsApiRegistry.allowLocalFallback(request.optString(BridgeFields.API));
         } catch (JSONException ignored) {
             return false;
         }
@@ -50,7 +52,7 @@ public class LocalJsApiInvoker implements JsApiInvoker {
     public String unavailableResponse(String requestJson) {
         return BridgeProtocol.errorResponse(
                 requestJson,
-                "PROCESS_UNAVAILABLE",
+                BridgeCodes.PROCESS_UNAVAILABLE,
                 "Main process JSAPI service is unavailable and local fallback is not allowed for this API.",
                 "local_fallback");
     }

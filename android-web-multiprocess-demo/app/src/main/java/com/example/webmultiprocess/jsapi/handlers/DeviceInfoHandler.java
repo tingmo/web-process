@@ -4,38 +4,18 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.os.Build;
 
+import com.example.webmultiprocess.jsapi.ApiConfigs;
+import com.example.webmultiprocess.jsapi.ConfiguredJsApiHandler;
 import com.example.webmultiprocess.jsapi.JsonUtils;
 import com.example.webmultiprocess.jsapi.JsApiContext;
-import com.example.webmultiprocess.jsapi.JsApiHandler;
 import com.example.webmultiprocess.jsapi.JsApiResult;
 import com.example.webmultiprocess.util.ProcessUtils;
 
 import org.json.JSONObject;
 
-public class DeviceInfoHandler implements JsApiHandler {
-    @Override
-    public String name() {
-        return "device.getInfo";
-    }
-
-    @Override
-    public String version() {
-        return "1.0.0";
-    }
-
-    @Override
-    public String description() {
-        return "Return app, process, Android SDK, and device model information.";
-    }
-
-    @Override
-    public boolean mainProcessOnly() {
-        return false;
-    }
-
-    @Override
-    public boolean allowLocalFallback() {
-        return true;
+public class DeviceInfoHandler extends ConfiguredJsApiHandler {
+    public DeviceInfoHandler() {
+        super(ApiConfigs.DEVICE_GET_INFO);
     }
 
     @Override

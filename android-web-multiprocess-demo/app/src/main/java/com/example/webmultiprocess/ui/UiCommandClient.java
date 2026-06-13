@@ -36,7 +36,7 @@ public final class UiCommandClient {
 
     public static boolean isSuccess(String responseJson) {
         try {
-            return new JSONObject(responseJson).optBoolean("success");
+            return new JSONObject(responseJson).optBoolean(UiCommandFields.SUCCESS);
         } catch (JSONException ignored) {
             return false;
         }
@@ -45,7 +45,7 @@ public final class UiCommandClient {
     public static JSONObject data(String responseJson) {
         try {
             JSONObject response = new JSONObject(responseJson);
-            JSONObject data = response.optJSONObject("data");
+            JSONObject data = response.optJSONObject(UiCommandFields.DATA);
             return data == null ? new JSONObject() : data;
         } catch (JSONException ignored) {
             return new JSONObject();
@@ -54,15 +54,15 @@ public final class UiCommandClient {
 
     public static String code(String responseJson) {
         try {
-            return new JSONObject(responseJson).optString("code");
+            return new JSONObject(responseJson).optString(UiCommandFields.CODE);
         } catch (JSONException ignored) {
-            return "BAD_UI_COMMAND_RESPONSE";
+            return UiCommandCodes.BAD_RESPONSE;
         }
     }
 
     public static String message(String responseJson) {
         try {
-            return new JSONObject(responseJson).optString("message");
+            return new JSONObject(responseJson).optString(UiCommandFields.MESSAGE);
         } catch (JSONException ignored) {
             return "Bad UI command response.";
         }
@@ -88,7 +88,7 @@ public final class UiCommandClient {
         }
         return UiCommandProtocol.error(
                 commandJson,
-                "UI_COMMAND_TIMEOUT",
+                UiCommandCodes.TIMEOUT,
                 "Local UI command timed out.",
                 ProcessUtils.currentProcessName(context),
                 timeoutMs);
@@ -102,7 +102,7 @@ public final class UiCommandClient {
         final AtomicReference<String> result = new AtomicReference<>();
         final String defaultResult = UiCommandProtocol.error(
                 commandJson,
-                "UI_COMMAND_TIMEOUT",
+                UiCommandCodes.TIMEOUT,
                 "IPCInvoker UI command call timed out.",
                 ProcessUtils.currentProcessName(context),
                 timeoutMs);
@@ -123,7 +123,7 @@ public final class UiCommandClient {
         } catch (Throwable throwable) {
             return UiCommandProtocol.error(
                     commandJson,
-                    "UI_COMMAND_IPC_EXCEPTION",
+                    UiCommandCodes.IPC_EXCEPTION,
                     throwable.getClass().getSimpleName() + ": " + throwable.getMessage(),
                     ProcessUtils.currentProcessName(context),
                     0L);
@@ -135,7 +135,7 @@ public final class UiCommandClient {
 
     private static void await(CountDownLatch latch, long timeoutMs) {
         try {
-            latch.await(Math.max(100L, timeoutMs), TimeUnit.MILLISECONDS);
+            latch.await(Math.max(UiCommandConfigs.MIN_TIMEOUT_MS, timeoutMs), TimeUnit.MILLISECONDS);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
