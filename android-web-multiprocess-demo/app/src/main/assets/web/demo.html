@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Web Multiprocess JSAPI Demo</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --bg: #f6f8fb;
+        --panel: #ffffff;
+        --text: #15202b;
+        --muted: #667587;
+        --line: #dfe6ee;
+        --blue: #2563a9;
+        --green: #147a55;
+        --red: #ba3f3f;
+        --gold: #9a6a16;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+        color: var(--text);
+        background: var(--bg);
+      }
+
+      main {
+        width: min(1040px, 100%);
+        margin: 0 auto;
+        padding: 18px;
+      }
+
+      h1 {
+        margin: 4px 0 8px;
+        font-size: 24px;
+        line-height: 1.2;
+      }
+
+      h2 {
+        margin: 0 0 12px;
+        font-size: 17px;
+      }
+
+      p {
+        margin: 0;
+        line-height: 1.55;
+      }
+
+      .muted {
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .status {
+        display: grid;
+        gap: 8px;
+        padding: 14px;
+        background: #eef3f8;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px;
+        margin-top: 14px;
+      }
+
+      .panel {
+        padding: 14px;
+        background: var(--panel);
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .actions {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      button,
+      input {
+        min-height: 42px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        font: inherit;
+      }
+
+      button {
+        padding: 0 12px;
+        color: #fff;
+        font-weight: 700;
+        background: var(--blue);
+      }
+
+      button.secondary {
+        color: var(--text);
+        background: #f5f7fa;
+      }
+
+      input {
+        width: 100%;
+        padding: 0 12px;
+        color: var(--text);
+        background: #fff;
+      }
+
+      .form-row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin: 0 0 10px;
+      }
+
+      .api-list {
+        display: grid;
+        gap: 8px;
+      }
+
+      .api-item {
+        padding: 10px;
+        background: #f7f9fc;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+      }
+
+      .api-item strong {
+        display: block;
+        margin-bottom: 4px;
+        font-size: 13px;
+      }
+
+      .tag {
+        display: inline-block;
+        margin-right: 6px;
+        padding: 2px 7px;
+        color: #fff;
+        font-size: 11px;
+        border-radius: 999px;
+        background: var(--green);
+      }
+
+      .tag.warn {
+        background: var(--gold);
+      }
+
+      .tag.no {
+        background: var(--red);
+      }
+
+      pre {
+        min-height: 260px;
+        max-height: 460px;
+        overflow: auto;
+        margin: 0;
+        padding: 12px;
+        color: #e9eef6;
+        background: #111923;
+        border-radius: 8px;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      @media (max-width: 760px) {
+        main {
+          padding: 14px;
+        }
+
+        .grid,
+        .actions,
+        .form-row {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Web 多进程 JSAPI Demo</h1>
+      <section class="status">
+        <p id="bridgeInfo">Bridge initializing...</p>
+        <p class="muted">请求统一为 callbackId/api/version/params，响应统一为 success/code/message/data/costMs。</p>
+      </section>
+
+      <div class="grid">
+        <section class="panel">
+          <h2>调用区</h2>
+          <div class="actions">
+            <button data-api="runtime.getApiCatalog">刷新接口目录</button>
+            <button data-api="device.getInfo">设备信息</button>
+            <button data-api="user.getProfile">主进程用户</button>
+            <button data-api="ui.toast">Native Toast</button>
+            <button data-api="demo.echo" class="secondary">标准 echo</button>
+          </div>
+
+          <h2 style="margin-top: 18px">主进程存储</h2>
+          <div class="form-row">
+            <input id="storageKey" value="demoKey" aria-label="storage key" />
+            <input id="storageValue" value="hello from web" aria-label="storage value" />
+          </div>
+          <div class="actions">
+            <button id="setStorage">storage.set</button>
+            <button id="getStorage" class="secondary">storage.get</button>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>接口目录</h2>
+          <div id="apiList" class="api-list"></div>
+        </section>
+      </div>
+
+      <section class="panel" style="margin-top: 14px">
+        <h2>调用日志</h2>
+        <pre id="log"></pre>
+      </section>
+    </main>
+
+    <script>
+      (function () {
+        const pending = new Map();
+        const logEl = document.getElementById("log");
+        const apiListEl = document.getElementById("apiList");
+        const bridgeInfoEl = document.getElementById("bridgeInfo");
+
+        function now() {
+          return new Date().toLocaleTimeString();
+        }
+
+        function log(title, payload) {
+          const text = JSON.stringify(payload, null, 2);
+          logEl.textContent = `[${now()}] ${title}\n${text}\n\n${logEl.textContent}`;
+        }
+
+        function renderBridgeInfo() {
+          if (!window.NativeBridge) {
+            bridgeInfoEl.textContent = "NativeBridge unavailable";
+            return;
+          }
+          try {
+            const info = JSON.parse(window.NativeBridge.getBridgeInfo());
+            bridgeInfoEl.textContent = `Bridge ${info.bridgeVersion} | ${info.mode} | ${info.process}`;
+          } catch (error) {
+            bridgeInfoEl.textContent = `Bridge info parse failed: ${error.message}`;
+          }
+        }
+
+        function renderCatalog(apis) {
+          apiListEl.innerHTML = "";
+          apis.forEach((api) => {
+            const item = document.createElement("div");
+            item.className = "api-item";
+            const mainTag = api.mainProcessOnly
+              ? '<span class="tag warn">main</span>'
+              : '<span class="tag">any</span>';
+            const fallbackTag = api.allowLocalFallback
+              ? '<span class="tag">fallback</span>'
+              : '<span class="tag no">no fallback</span>';
+            item.innerHTML = `
+              <strong>${api.name} v${api.version}</strong>
+              <p>${mainTag}${fallbackTag}</p>
+              <p class="muted">${api.description}</p>
+            `;
+            apiListEl.appendChild(item);
+          });
+        }
+
+        window.WebNative = {
+          invoke(api, params, version) {
+            return new Promise((resolve, reject) => {
+              if (!window.NativeBridge) {
+                reject(new Error("NativeBridge unavailable"));
+                return;
+              }
+              const callbackId = `cb_${Date.now()}_${Math.random().toString(16).slice(2)}`;
+              pending.set(callbackId, { api, resolve, reject });
+              const request = {
+                callbackId,
+                api,
+                version: version || "1.0.0",
+                params: params || {},
+                pageUrl: location.href,
+                bridgeVersion: "1.0.0",
+                timestamp: Date.now(),
+              };
+              window.NativeBridge.postMessage(JSON.stringify(request));
+              setTimeout(() => {
+                if (pending.has(callbackId)) {
+                  pending.delete(callbackId);
+                  reject(new Error(`${api} timeout`));
+                }
+              }, 8000);
+            });
+          },
+          __callback(responseJson) {
+            let response;
+            try {
+              response = JSON.parse(responseJson);
+            } catch (error) {
+              log("BAD_NATIVE_RESPONSE", { responseJson, error: error.message });
+              return;
+            }
+            const callback = pending.get(response.callbackId);
+            if (!callback) {
+              log("ORPHAN_CALLBACK", response);
+              return;
+            }
+            pending.delete(response.callbackId);
+            callback.resolve(response);
+            log(response.api || callback.api, response);
+            if (response.api === "runtime.getApiCatalog" && response.success) {
+              renderCatalog(response.data.apis || []);
+            }
+          },
+        };
+
+        async function invokeAndLog(api, params) {
+          try {
+            const response = await window.WebNative.invoke(api, params);
+            return response;
+          } catch (error) {
+            const failure = { api, success: false, code: "WEB_ERROR", message: error.message };
+            log(api, failure);
+            return failure;
+          }
+        }
+
+        document.querySelectorAll("button[data-api]").forEach((button) => {
+          button.addEventListener("click", () => {
+            const api = button.dataset.api;
+            const params =
+              api === "ui.toast"
+                ? { message: "Toast from WebView", long: false }
+                : api === "demo.echo"
+                  ? { message: "standardized handler", payload: { from: "web" } }
+                  : {};
+            invokeAndLog(api, params);
+          });
+        });
+
+        document.getElementById("setStorage").addEventListener("click", () => {
+          invokeAndLog("storage.set", {
+            key: document.getElementById("storageKey").value,
+            value: document.getElementById("storageValue").value,
+          });
+        });
+
+        document.getElementById("getStorage").addEventListener("click", () => {
+          invokeAndLog("storage.get", {
+            key: document.getElementById("storageKey").value,
+          });
+        });
+
+        renderBridgeInfo();
+        invokeAndLog("runtime.getApiCatalog", {});
+      })();
+    </script>
+  </body>
+</html>
